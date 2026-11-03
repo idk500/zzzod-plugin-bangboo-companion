@@ -59,8 +59,9 @@ def build() -> None:
     f_sub = ImageFont.truetype(FONT_CN, 22)
     f_en = ImageFont.truetype(FONT_EN, 18)
     d.text((36, 52), '邦布伴侣', font=f_title, fill=(255, 244, 230))
-    d.text((40, 128), '一条龙开工，邦布陪你跳舞', font=f_sub, fill=(255, 190, 130))
-    d.text((40, 164), 'BANGBOO COMPANION', font=f_en, fill=(150, 160, 190))
+    d.text((40, 120), '召唤一只会动的小可爱', font=f_sub, fill=(255, 190, 130))
+    d.text((40, 154), '为一条龙打call', font=f_sub, fill=(255, 190, 130))
+    d.text((40, 192), 'BANGBOO COMPANION', font=f_en, fill=(150, 160, 190))
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
     bg.convert('RGB').save(OUT, quality=95)
