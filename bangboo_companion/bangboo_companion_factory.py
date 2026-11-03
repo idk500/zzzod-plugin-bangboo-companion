@@ -30,7 +30,8 @@ class BangbooCompanionAppFactory(ApplicationFactory):
     """邦布伴侣工厂。
 
     不进一条龙链（DEFAULT_GROUP=False）。工厂在 GUI 启动/插件刷新时实例化，
-    借此注册事件监听：一条龙开始运行 → 跳舞；停止运行 → 暂停。
+    借此注册事件监听：任意应用开始运行 → 跳舞；停止运行 → 停帧。
+    （一条龙自身不派发 START，详见 _on_app_event 注释）
     """
 
     def __init__(self, ctx: 'OneDragonContext'):
@@ -61,9 +62,13 @@ class BangbooCompanionAppFactory(ApplicationFactory):
         self._controller.reload(gif_path or get_default_gif_path())
 
     def _on_app_event(self, item) -> None:
-        # 事件体是 app_id；只关心一条龙本身
-        if getattr(item, 'data', None) != 'one_dragon':
-            return
+        # 注意：上游基座 OneDragonApp 覆写 handle_init 且未调用 super()，
+        # 一条龙自身不派发「应用开始运行」事件（真实 GUI 日志实证），
+        # 因此不能只过滤 data=='one_dragon' 的 START。
+        # 放宽口径：任何应用开始 → 跳舞；任何应用停止 → 停帧。
+        # 一条龙链内子应用切换时 STOP/START 在舞者 200ms 指令轮询窗口内
+        # 顺序消费、净效果=播放，不会闪停；链条真正结束（无后续 START）
+        # 才会定格。独立应用跑完同样正确停帧。
         if item.event_id == ApplicationEventId.APPLICATION_START.value:
             self._controller.play()
         else:
