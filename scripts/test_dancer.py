@@ -1,10 +1,12 @@
 """舞者引擎冒烟测试：play → 截图 → pause → 截图 → quit。"""
+import os
 import sys
 import time
 from pathlib import Path
 
 PLUGIN_DIR = Path(__file__).parent.parent
-APP_SRC = Path(r'/workspace/app/src')
+# 一条龙基座源码位置因机器而异，优先读环境变量，其次按安装布局猜
+APP_SRC = Path(os.environ.get("ONEDRAGON_SRC", PLUGIN_DIR.parent.parent / "src"))
 for p in (PLUGIN_DIR, APP_SRC):
     sys.path.insert(0, str(p))
 

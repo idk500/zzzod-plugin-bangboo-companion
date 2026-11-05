@@ -1,9 +1,11 @@
 """工厂事件过滤逻辑验证（mock ctx，不起 GUI）。"""
+import os
 import sys
 from pathlib import Path
 
 PLUGIN_DIR = Path(__file__).parent.parent
-for p in (PLUGIN_DIR, Path(r'/workspace/app/src')):
+APP_SRC = Path(os.environ.get("ONEDRAGON_SRC", PLUGIN_DIR.parent.parent / "src"))
+for p in (PLUGIN_DIR, APP_SRC):
     sys.path.insert(0, str(p))
 
 from one_dragon.base.operation.application_base import ApplicationEventId

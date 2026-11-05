@@ -1,5 +1,13 @@
 """生成占位 dance.gif：简单像素小人跳舞动画（素材就位前打通链路用）。"""
+import os
+from pathlib import Path
+
 from PIL import Image, ImageDraw
+
+REPO = Path(__file__).resolve().parents[1]
+OUT = Path(os.environ.get("GIF_OUT", REPO / "assets" / "dance.gif"))
+if not OUT.parent.is_dir():
+    raise SystemExit(f"输出目录不存在：{OUT.parent}，请用环境变量 GIF_OUT 指定路径")
 
 W, H = 160, 220
 FRAMES = 8
@@ -32,7 +40,7 @@ for i in range(FRAMES):
     frames.append(im)
 
 frames[0].save(
-    r'/workspace/plugins-src/zzzod-plugin-chinatsu-dance/assets/dance.gif',
+    OUT,
     save_all=True, append_images=frames[1:], duration=120, loop=0, transparency=0,
 )
-print('placeholder gif written')
+print('placeholder gif written:', OUT)
