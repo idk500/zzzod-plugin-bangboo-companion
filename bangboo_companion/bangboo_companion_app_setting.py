@@ -7,7 +7,7 @@ from .const import APP_ID
 
 
 class BangbooCompanionAppSetting(AppSettingProvider):
-    """邦布伴侣设置入口（自定义 GIF 素材）。"""
+    """运行指示器设置入口。"""
 
     app_id = APP_ID
     setting_type = SettingType.INTERFACE

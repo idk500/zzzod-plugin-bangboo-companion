@@ -4,7 +4,7 @@ from . import const
 
 
 class BangbooCompanionConfig(ApplicationConfig):
-    """邦布安灯配置。"""
+    """运行指示器配置。"""
 
     def __init__(self, instance_idx: int, group_id: str):
         ApplicationConfig.__init__(
@@ -15,6 +15,15 @@ class BangbooCompanionConfig(ApplicationConfig):
         )
 
     # ---------- 面板 ----------
+
+    @property
+    def auto_show(self) -> bool:
+        """启动程序时自动显示灯牌（关=只在运行时才出现）。"""
+        return bool(self.get('auto_show', True))
+
+    @auto_show.setter
+    def auto_show(self, new_value: bool) -> None:
+        self.update('auto_show', bool(new_value))
 
     @property
     def panel_x(self) -> int:

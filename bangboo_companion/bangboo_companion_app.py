@@ -1,4 +1,4 @@
-"""邦布安灯应用：独立运行入口（显示/隐藏灯牌）。"""
+"""运行指示器应用：手动运行 = 显示/隐藏灯牌。"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class BangbooCompanionApp(Application):
-    """手动运行 = 显示/隐藏安灯灯牌。"""
+    """手动运行 = 显示/隐藏灯牌。"""
 
     def __init__(self, ctx: 'OneDragonContext', panel: 'AndonPanelController'):
         Application.__init__(
@@ -32,6 +32,6 @@ class BangbooCompanionApp(Application):
     def toggle_panel(self) -> OperationRoundResult:
         if self._panel.visible:
             self._panel.hide()
-            return self.round_success('安灯面板已隐藏（再运行一次恢复显示）')
+            return self.round_success('已隐藏，再运行一次恢复显示')
         self._panel.show()
-        return self.round_success('安灯面板已显示')
+        return self.round_success('已显示')

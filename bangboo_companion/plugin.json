@@ -1,10 +1,10 @@
 {
   "id": "bangboo_companion",
-  "name": "邦布安灯",
-  "summary": "桌面安灯（Andon）信号灯：绿=运行中、黄=卡死前兆/超时、红=运行失败或监控击杀（闪烁+蜂鸣）、灰=待机；左键点击应答告警、拖动调整位置。状态变化写入 plugin_data/bangboo_companion/andon_events.jsonl。纯桌面显示，不操作游戏、不影响一条龙流程。",
+  "name": "运行指示器",
+  "summary": "桌面小信号灯：绿=正在运行、黄=注意（暂停/卡死前兆/超时）、红=异常（闪烁+蜂鸣）、灰=待机。覆盖一条龙与单个应用；红灯亮起后左键点一下灯牌就表示「我知道了」，拖动能挪位置。纯桌面显示，不操作游戏、不影响运行流程。",
   "cover": "assets/ui/cover.png",
-  "version": "0.2.0",
-  "versionCode": 3,
+  "version": "0.3.0",
+  "versionCode": 4,
   "author": {
     "name": "idk500",
     "url": "https://github.com/idk500"

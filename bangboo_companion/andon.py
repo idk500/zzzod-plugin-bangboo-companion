@@ -53,6 +53,12 @@ REBEEP_SEC = 60
 # 应答后「已应答」红灯的保持时长（过后自动复位，避免一直红着）
 ACK_HOLD_SEC = 120
 
+# 不在应用列表里的运行主体，显示用的人类可读名
+_SPECIAL_LABELS = {
+    'one_dragon': '一条龙',
+    'monitor': '监控',
+}
+
 
 @dataclass
 class AndonSnapshot:
@@ -90,6 +96,12 @@ class AndonEngine:
         self._config = None
         self._event_log: Path | None = None
         self._pending_beep: queue.Queue = queue.Queue()
+
+        # 一条龙整体运行状态（轮询 run_context，覆盖不派发 START 的链本身）
+        self._ctx_was_running: bool = False
+        self._ctx_since: float = 0.0
+        self._ctx_pending_alarm: str | None = None
+        self._ctx_pending_reason: str = ''
 
     # ---------- 配置 ----------
 
@@ -169,6 +181,39 @@ class AndonEngine:
             if st == 3 and now - mtime < 300:
                 running.setdefault(app_id, mtime)
 
+        # ---- 一条龙整体状态（关键：链本身不派发应用事件，只能轮询）----
+        ctx_pause_reason = ''
+        ctx_running, ctx_paused, ctx_app_id = self._read_run_context()
+        if ctx_running or ctx_paused:
+            if not self._ctx_was_running:
+                self._ctx_was_running = True
+                self._ctx_since = now
+                # 新一轮开始 = 上一轮的链级告警进入新周期，灯回到当前状态
+                # （告警本身已写进 jsonl，不会丢记录）
+                self._ctx_pending_alarm = None
+                with self._lock:
+                    if self._alarm_key is not None and self._alarm_key.startswith('ctx:'):
+                        self._alarm_key = None
+                        self._alarm_reason = ''
+                        self._alarm_app = ''
+            running.setdefault(ctx_app_id or 'one_dragon', self._ctx_since)
+            if ctx_paused:
+                ctx_pause_reason = '已暂停（在运行页点继续即可）'
+        elif self._ctx_was_running:
+            # 本轮刚结束：判定整体结果。手动结束 = STOPPED，不算异常
+            self._ctx_was_running = False
+            has_app_fail = any(
+                st == 2 and dt == today and mtime >= self._start_ts
+                for st, dt, _r, mtime in records.values()
+            )
+            if not has_app_fail:
+                reason = self._ctx_finish_failure()
+                if reason:
+                    self._ctx_pending_alarm = 'ctx:%s:%d' % (reason, int(now))
+                    self._ctx_pending_reason = (
+                        '本轮未能启动' if reason == 'NOT_STARTED' else '本轮运行失败'
+                    )
+
         # ---- 红灯：运行失败 / 监控击杀 ----
         alarm_reason = ''
         alarm_app = ''
@@ -186,6 +231,13 @@ class AndonEngine:
             alarm_app = app_id
             alarm_key = key
             break
+
+        if alarm_key is None and self._ctx_pending_alarm is not None:
+            key = self._ctx_pending_alarm
+            if key not in self._acked_keys:
+                alarm_key = key
+                alarm_app = 'one_dragon'
+                alarm_reason = self._ctx_pending_reason
 
         if alarm_key is None:
             result = self._read_json(self._monitor_dir() / 'monitor_result.json')
@@ -241,6 +293,9 @@ class AndonEngine:
                 elif elapsed >= float(self._cfg('app_timeout_min', 45)):
                     warn_reason = '本轮已运行 %.0f 分钟（超阈值）' % elapsed
 
+        if ctx_pause_reason:
+            warn_reason = ctx_pause_reason
+
         # ---- 统计 ----
         ok = sum(1 for st, dt, _r, _m in records.values() if st == 1 and dt == today)
         fail = sum(1 for st, dt, _r, _m in records.values() if st == 2 and dt == today)
@@ -288,8 +343,9 @@ class AndonEngine:
             )
 
         return AndonSnapshot(
-            state=STATE_IDLE, title='待机', app_name='无应用运行',
-            elapsed_text='', detail='等待一条龙启动', acked=False, stats_text=stats_text,
+            state=STATE_IDLE, title='待机', app_name='未运行',
+            elapsed_text='', detail='点「开始」后自动亮绿', acked=False,
+            stats_text=stats_text,
         )
 
     def pop_beep(self) -> bool:
@@ -302,7 +358,44 @@ class AndonEngine:
 
     # ---------- 内部 ----------
 
+    def _read_run_context(self) -> tuple[bool, bool, str]:
+        """读取全局运行状态（覆盖一条龙链本身，链不派发应用事件）。
+
+        :return: (运行中, 已暂停, 当前应用 id)
+        """
+        rc = getattr(self._ctx, 'run_context', None)
+        if rc is None:
+            return False, False, ''
+        try:
+            running = bool(getattr(rc, 'is_context_running', False))
+            paused = bool(getattr(rc, 'is_context_pause', False))
+            app_id = str(getattr(rc, 'current_app_id', '') or '')
+        except Exception:
+            return False, False, ''
+        return running, paused, app_id
+
+    def _ctx_finish_failure(self) -> str:
+        """上一轮的整体结束原因；只有 FAILED / NOT_STARTED 才算异常。
+
+        手动结束是 STOPPED，不能报红（用户按停止不是故障）。
+        """
+        rc = getattr(self._ctx, 'run_context', None)
+        res = getattr(rc, 'last_run_result', None)
+        if res is None:
+            return ''
+        try:
+            reason = str(getattr(res, 'finish_reason', '') or '')
+        except Exception:
+            return ''
+        # StrEnum 的 str() 得到的是值；兼容枚举成员本身
+        if reason not in ('FAILED', 'NOT_STARTED'):
+            name = getattr(getattr(res, 'finish_reason', None), 'name', '')
+            reason = name if name in ('FAILED', 'NOT_STARTED') else ''
+        return reason
+
     def _app_label(self, app_id: str) -> str:
+        if app_id in _SPECIAL_LABELS:
+            return _SPECIAL_LABELS[app_id]
         try:
             info = self._ctx.factory_manager.get_plugin_info(app_id)
             if info is not None and info.app_name:

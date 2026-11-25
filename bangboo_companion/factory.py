@@ -50,8 +50,17 @@ def get_panel_or_none() -> AndonPanelController | None:
     return _panel
 
 
+def _is_gui_session() -> bool:
+    """当前是否运行在 Qt GUI 会话里（脚本调用不弹窗）。"""
+    try:
+        from PySide6.QtWidgets import QApplication
+        return QApplication.instance() is not None
+    except Exception:
+        return False
+
+
 class BangbooCompanionAppFactory(ApplicationFactory):
-    """邦布安灯工厂。
+    """运行指示器工厂。
 
     不进一条龙链（DEFAULT_GROUP=False）。工厂在 GUI 启动/插件刷新时实例化，
     借此注册应用事件监听：
@@ -74,6 +83,13 @@ class BangbooCompanionAppFactory(ApplicationFactory):
             _listened_ctx_ids.add(id(ctx))
             ctx.listen_event(ApplicationEventId.APPLICATION_START.value, self._on_app_event)
             ctx.listen_event(ApplicationEventId.APPLICATION_STOP.value, self._on_app_event)
+
+        # 信号灯是固定装置：装了就一直摆在桌面上（灰=待机），
+        # 否则用户跑起来看不到灯，会以为插件没生效。
+        # 只在 GUI 会话里自动显示，避免脚本/无界面调用莫名弹出窗口。
+        auto_show = self._config.get('auto_show', True) if self._config is not None else True
+        if auto_show and _is_gui_session():
+            self._panel.show()
 
     def _read_config(self) -> BangbooCompanionConfig | None:
         try:

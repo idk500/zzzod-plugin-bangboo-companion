@@ -64,7 +64,7 @@ class AndonWindow:
         self._save_pos = save_pos
 
         self._root = tk.Tk()
-        self._root.title('bangboo-andon')
+        self._root.title('run-indicator')
         self._root.overrideredirect(True)
         self._root.attributes('-topmost', True)
         self._root.configure(bg=BG_EDGE)
@@ -114,7 +114,7 @@ class AndonWindow:
         )
         self._title.pack(fill='x', pady=(2, 0))
 
-        self._app_var = tk.StringVar(value='无应用运行')
+        self._app_var = tk.StringVar(value='未运行')
         self._app = tk.Label(
             self._body, textvariable=self._app_var, bg=BG, fg=FG_SUB,
             font=(base.actual('family'), 10), anchor='center',
@@ -128,7 +128,7 @@ class AndonWindow:
         )
         self._elapsed.pack(fill='x')
 
-        self._detail_var = tk.StringVar(value='等待一条龙启动')
+        self._detail_var = tk.StringVar(value='点「开始」后自动亮绿')
         self._detail = tk.Label(
             self._body, textvariable=self._detail_var, bg=BG, fg=FG_SUB,
             font=(base.actual('family'), 9), anchor='center',

@@ -58,10 +58,21 @@ class FakeFactoryManager:
         return FakeInfo(name) if name else None
 
 
+class FakeRunContext:
+    """模拟 run_context：链本身的运行/暂停/结束状态。"""
+
+    def __init__(self):
+        self.is_context_running = False
+        self.is_context_pause = False
+        self.current_app_id = None
+        self.last_run_result = None
+
+
 class FakeCtx:
     def __init__(self, work: Path):
         self.current_instance_idx = 1
         self.factory_manager = FakeFactoryManager({'coffee': '咖啡店', 'charge_plan': '体力计划'})
+        self.run_context = FakeRunContext()
         self._plugin_data = work / 'plugin_data'
 
     def get_plugin_data_dir(self, app_id):
@@ -164,6 +175,44 @@ def main() -> int:
     snap = engine.sample()
     check('7 运行记录兜底绿灯', snap.state == STATE_RUNNING and snap.app_name == '体力计划',
           '%s/%s' % (snap.state, snap.app_name))
+
+    # 9. 一条龙整体状态（链本身不派发应用事件，只能轮询）
+    (cfg_dir / 'charge_plan.yml').unlink()   # 清掉上一步的运行中记录
+    engine._last_stop_ts = 0.0
+    rc = ctx.run_context
+    rc.is_context_running = True
+    rc.current_app_id = 'one_dragon'
+    snap = engine.sample()
+    check('9 链运行→绿灯', snap.state == STATE_RUNNING and snap.app_name == '一条龙',
+          '%s/%s' % (snap.state, snap.app_name))
+
+    rc.is_context_pause = True
+    snap = engine.sample()
+    check('9b 链暂停→黄灯', snap.state == STATE_WARN and '暂停' in snap.detail,
+          '%s/%s' % (snap.state, snap.detail))
+
+    # 10. 链级失败→红灯；手动停止不报红
+    class _Result:
+        def __init__(self, reason):
+            self.finish_reason = reason
+
+    rc.is_context_pause = False
+    rc.is_context_running = False
+    rc.last_run_result = _Result('FAILED')
+    snap = engine.sample()
+    check('10 链失败→红灯', snap.state == STATE_ALARM and '失败' in snap.app_name,
+          '%s/%s' % (snap.state, snap.app_name))
+
+    engine.ack()
+    rc.is_context_running = True
+    rc.current_app_id = 'one_dragon'
+    snap = engine.sample()
+    check('10b 新一轮复位为绿灯', snap.state == STATE_RUNNING, snap.state)
+
+    rc.is_context_running = False
+    rc.last_run_result = _Result('STOPPED')
+    snap = engine.sample()
+    check('10c 手动停止不报警', snap.state != STATE_ALARM, snap.state)
 
     # 8. 事件日志留痕
     log_path = ctx.get_plugin_data_dir('bangboo_companion') / 'andon_events.jsonl'

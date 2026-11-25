@@ -1,4 +1,4 @@
-"""生成邦布安灯封面：600x376（市场卡片 300x188 的 2x）。
+"""生成运行指示器封面：600x376（市场卡片 300x188 的 2x）。
 
 规范（one_dragon_qt/widgets/plugin_card.py）：KeepAspectRatioByExpanding 居中裁切，
 底部 38% 会被压黑渐变，文字放上半部左侧，主体放右侧。
@@ -48,11 +48,11 @@ def build() -> None:
     f_en = ImageFont.truetype(FONT_EN, 15)
 
     x0 = 46
-    d.text((x0, 52), '邦布安灯', font=f_title, fill=(242, 244, 248))
-    d.text((x0 + 3, 122), 'ANDON SIGNAL', font=f_en, fill=(120, 132, 150))
-    d.text((x0, 152), '一条龙的运行状态信号灯', font=f_sub, fill=(174, 182, 194))
-    d.text((x0, 186), '绿 运行中   ·   黄 卡死前兆   ·   红 异常', font=f_small, fill=(140, 150, 166))
-    d.text((x0, 212), '点击应答 · 未应答持续提醒', font=f_small, fill=(110, 120, 136))
+    d.text((x0, 52), '运行指示器', font=f_title, fill=(242, 244, 248))
+    d.text((x0 + 3, 122), 'RUN STATUS LIGHT', font=f_en, fill=(120, 132, 150))
+    d.text((x0, 152), '一条龙跑起来就亮绿，出问题闪红', font=f_sub, fill=(174, 182, 194))
+    d.text((x0, 186), '绿 运行中   ·   黄 注意   ·   红 异常', font=f_small, fill=(140, 150, 166))
+    d.text((x0, 212), '红灯点一下 = 我知道了', font=f_small, fill=(110, 120, 136))
 
     cx = 476
     lamps = [
