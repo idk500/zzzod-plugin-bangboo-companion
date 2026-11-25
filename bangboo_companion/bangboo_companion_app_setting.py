@@ -3,7 +3,7 @@ from one_dragon_qt.services.app_setting.app_setting_provider import (
     SettingType,
 )
 
-from .bangboo_companion_const import APP_ID
+from .const import APP_ID
 
 
 class BangbooCompanionAppSetting(AppSettingProvider):

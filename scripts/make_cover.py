@@ -1,4 +1,4 @@
-"""生成邦布伴侣封面：600x376（市场卡片 300x188 的 2x）。
+"""生成邦布安灯封面：600x376（市场卡片 300x188 的 2x）。
 
 规范（one_dragon_qt/widgets/plugin_card.py）：KeepAspectRatioByExpanding 居中裁切，
 底部 38% 会被压黑渐变，文字放上半部左侧，主体放右侧。
@@ -12,59 +12,71 @@ PLUGIN_DIR = Path(__file__).parent.parent
 OUT = PLUGIN_DIR / 'bangboo_companion' / 'assets' / 'ui' / 'cover.png'
 
 FONT_CN = r'C:\Windows\Fonts\msyhbd.ttc'
+FONT_CN_REG = r'C:\Windows\Fonts\msyh.ttc'
 FONT_EN = r'C:\Windows\Fonts\bahnschrift.ttf'
 
 
-def build() -> None:
-    # 深色底 + 柔和光斑（邦布橙 + 深蓝夜色）
-    bg = Image.new('RGB', (W, H), (24, 28, 44))
+def _glow(bg, boxes, blur=110, alpha=110):
     glow = Image.new('RGB', (W, H), (0, 0, 0))
     gd = ImageDraw.Draw(glow)
-    gd.ellipse([W - 320, -120, W + 80, 260], fill=(255, 140, 60))   # 右上橙光
-    gd.ellipse([-140, H - 200, 180, H + 120], fill=(70, 90, 200))   # 左下蓝光
-    glow = glow.filter(ImageFilter.GaussianBlur(120))
-    bg = Image.blend(bg, Image.composite(glow, bg, Image.new('L', (W, H), 110)), 0.85)
+    for box, color in boxes:
+        gd.ellipse(box, fill=color)
+    glow = glow.filter(ImageFilter.GaussianBlur(blur))
+    return Image.blend(bg, Image.composite(glow, bg, Image.new('L', (W, H), alpha)), 0.8)
 
-    # 底部压暗渐变（模拟市场卡片渲染）
+
+def build() -> None:
+    bg = Image.new('RGB', (W, H), (18, 20, 26))
+    bg = _glow(bg, [
+        ([W - 260, -140, W + 120, 200], (255, 60, 60)),
+        ([W - 220, 180, W + 120, 460], (46, 204, 113)),
+        ([-160, H - 220, 200, H + 120], (40, 60, 120)),
+    ])
+
     grad = Image.new('L', (1, H))
     for y in range(H):
         t = max(0.0, (y / H - 0.62) / 0.38)
-        grad.putpixel((0, y), int(200 * t))
+        grad.putpixel((0, y), int(205 * t))
     grad = grad.resize((W, H))
-    dark = Image.new('RGB', (W, H), (0, 0, 0))
-    bg = Image.composite(dark, bg, grad)
+    bg = Image.composite(Image.new('RGB', (W, H), (0, 0, 0)), bg, grad)
 
-    # 邦布主体：取 GIF 动感最强的一帧，等比放大
-    gif = Image.open(PLUGIN_DIR / 'bangboo_companion' / 'assets' / 'dance.gif')
-    gif.seek(2)
-    art = gif.convert('RGBA')
-    target_h = 340
-    scale = target_h / art.height
-    art = art.resize((int(art.width * scale), target_h), Image.Resampling.LANCZOS)
-    # 描边光晕提升辨识度
-    alpha = art.getchannel('A')
-    halo = Image.new('RGBA', art.size, (0, 0, 0, 0))
-    halo.paste((255, 170, 80, 160), mask=alpha.point(lambda v: 255 if v > 40 else 0))
-    halo = halo.filter(ImageFilter.GaussianBlur(6))
-    art_rgba = Image.new('RGBA', (W, H), (0, 0, 0, 0))
-    ax, ay = W - art.width - 28, H - art.height - 12
-    art_rgba.alpha_composite(halo, (ax, ay))
-    art_rgba.alpha_composite(art, (ax, ay))
-    bg = bg.convert('RGBA')
-    bg.alpha_composite(art_rgba)
+    d = ImageDraw.Draw(bg, 'RGBA')
 
-    # 文字：左上
-    d = ImageDraw.Draw(bg)
-    f_title = ImageFont.truetype(FONT_CN, 58)
-    f_sub = ImageFont.truetype(FONT_CN, 22)
-    f_en = ImageFont.truetype(FONT_EN, 18)
-    d.text((36, 52), '邦布伴侣', font=f_title, fill=(255, 244, 230))
-    d.text((40, 128), '让邦布为一条龙打call~', font=f_sub, fill=(255, 190, 130))
-    d.text((40, 164), 'BANGBOO COMPANION', font=f_en, fill=(150, 160, 190))
+    f_title = ImageFont.truetype(FONT_CN, 54)
+    f_sub = ImageFont.truetype(FONT_CN_REG, 21)
+    f_small = ImageFont.truetype(FONT_CN_REG, 16)
+    f_en = ImageFont.truetype(FONT_EN, 15)
+
+    x0 = 46
+    d.text((x0, 52), '邦布安灯', font=f_title, fill=(242, 244, 248))
+    d.text((x0 + 3, 122), 'ANDON SIGNAL', font=f_en, fill=(120, 132, 150))
+    d.text((x0, 152), '一条龙的运行状态信号灯', font=f_sub, fill=(174, 182, 194))
+    d.text((x0, 186), '绿 运行中   ·   黄 卡死前兆   ·   红 异常', font=f_small, fill=(140, 150, 166))
+    d.text((x0, 212), '点击应答 · 未应答持续提醒', font=f_small, fill=(110, 120, 136))
+
+    cx = 476
+    lamps = [
+        (86, (255, 59, 59)),
+        (156, (255, 176, 32)),
+        (226, (46, 204, 113)),
+    ]
+    r = 40
+    for cy, color in lamps:
+        halo = Image.new('RGBA', (W, H), (0, 0, 0, 0))
+        hd = ImageDraw.Draw(halo)
+        hd.ellipse([cx - r - 18, cy - r - 18, cx + r + 18, cy + r + 18], fill=(*color, 90))
+        halo = halo.filter(ImageFilter.GaussianBlur(18))
+        bg = Image.alpha_composite(bg.convert('RGBA'), halo).convert('RGB')
+    d = ImageDraw.Draw(bg, 'RGBA')
+    for cy, color in lamps:
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(*color, 235))
+
+    d.rounded_rectangle([cx - 18, 268, cx + 18, 300], radius=8, fill=(60, 66, 78, 255))
+    d.rounded_rectangle([cx - 52, 296, cx + 52, 306], radius=5, fill=(44, 49, 58, 255))
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    bg.convert('RGB').save(OUT, quality=95)
-    print('cover saved:', OUT)
+    bg.save(OUT, optimize=True)
+    print('cover saved:', OUT, bg.size)
 
 
 if __name__ == '__main__':

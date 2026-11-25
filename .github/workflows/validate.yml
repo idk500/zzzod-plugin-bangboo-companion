@@ -11,5 +11,21 @@ permissions:
 
 jobs:
   validate:
-    if: github.repository != 'OneDragon-Anyone/plugin-template'
-    uses: OneDragon-Anyone/plugin-template/.github/workflows/reusable-validate.yml@v1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout plugin repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate repository
+        run: python scripts/validate_plugin.py --repo . --strict
+
+      - name: Build and validate release asset
+        run: |
+          python scripts/build_zip.py --repo . --out dist
+          python scripts/validate_plugin.py --zip dist/bangboo_companion.zip

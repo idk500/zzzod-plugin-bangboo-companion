@@ -1,12 +1,10 @@
 {
   "id": "bangboo_companion",
-  "name": "邦布伴侣",
-  "summary": "桌面装饰插件：一条龙启动时，邦布在桌面右下角跳舞；一条龙停止时定格原地。支持自定义 GIF 素材（设置页选择或替换 assets/dance.gif）。纯桌面演出，不操作游戏、不影响一条龙流程。支持左键拖动、右键菜单暂停/退出。",
+  "name": "邦布安灯",
+  "summary": "桌面安灯（Andon）信号灯：绿=运行中、黄=卡死前兆/超时、红=运行失败或监控击杀（闪烁+蜂鸣）、灰=待机；左键点击应答告警、拖动调整位置。状态变化写入 plugin_data/bangboo_companion/andon_events.jsonl。纯桌面显示，不操作游戏、不影响一条龙流程。",
   "cover": "assets/ui/cover.png",
-  "version": "0.1.1",
-  "versionCode": 2,
-  "defaultGroup": false,
-  "needNotify": false,
+  "version": "0.2.0",
+  "versionCode": 3,
   "author": {
     "name": "idk500",
     "url": "https://github.com/idk500"
@@ -19,6 +17,5 @@
     "minAppVersion": "0.0.0",
     "minCoreApiVersion": 1,
     "python": ">=3.11"
-  },
-  "apps": []
+  }
 }

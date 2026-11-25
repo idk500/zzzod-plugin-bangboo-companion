@@ -1,23 +1,88 @@
 from one_dragon.base.operation.application.application_config import ApplicationConfig
-from . import bangboo_companion_const
+
+from . import const
 
 
 class BangbooCompanionConfig(ApplicationConfig):
-    """邦布伴侣配置。"""
+    """邦布安灯配置。"""
 
     def __init__(self, instance_idx: int, group_id: str):
         ApplicationConfig.__init__(
             self,
-            app_id=bangboo_companion_const.APP_ID,
+            app_id=const.APP_ID,
             instance_idx=instance_idx,
             group_id=group_id,
         )
 
-    @property
-    def gif_path(self) -> str:
-        """自定义 GIF 路径，空 = 使用内置 assets/dance.gif"""
-        return self.get('gif_path', '')
+    # ---------- 面板 ----------
 
-    @gif_path.setter
-    def gif_path(self, new_value: str) -> None:
-        self.update('gif_path', new_value)
+    @property
+    def panel_x(self) -> int:
+        """面板横坐标，-1 = 自动放右下角。"""
+        return int(self.get('panel_x', -1) or -1)
+
+    @panel_x.setter
+    def panel_x(self, new_value: int) -> None:
+        self.update('panel_x', int(new_value))
+
+    @property
+    def panel_y(self) -> int:
+        """面板纵坐标，-1 = 自动放右下角。"""
+        return int(self.get('panel_y', -1) or -1)
+
+    @panel_y.setter
+    def panel_y(self, new_value: int) -> None:
+        self.update('panel_y', int(new_value))
+
+    def reset_position(self) -> None:
+        self.update('panel_x', -1)
+        self.update('panel_y', -1)
+
+    @property
+    def show_app_name(self) -> bool:
+        """文字区显示中文应用名（关则显示 app_id）。"""
+        return bool(self.get('show_app_name', True))
+
+    @show_app_name.setter
+    def show_app_name(self, new_value: bool) -> None:
+        self.update('show_app_name', bool(new_value))
+
+    # ---------- 告警 ----------
+
+    @property
+    def sound_enabled(self) -> bool:
+        """红灯蜂鸣。"""
+        return bool(self.get('sound_enabled', True))
+
+    @sound_enabled.setter
+    def sound_enabled(self, new_value: bool) -> None:
+        self.update('sound_enabled', bool(new_value))
+
+    # ---------- 黄灯阈值 ----------
+
+    @property
+    def warn_still_streak(self) -> int:
+        """监控连续静止采样次数达到多少亮黄灯。"""
+        return int(self.get('warn_still_streak', 6) or 6)
+
+    @warn_still_streak.setter
+    def warn_still_streak(self, new_value: int) -> None:
+        self.update('warn_still_streak', int(new_value))
+
+    @property
+    def warn_log_stall_min(self) -> float:
+        """日志停滞多少分钟亮黄灯。"""
+        return float(self.get('warn_log_stall_min', 8) or 8)
+
+    @warn_log_stall_min.setter
+    def warn_log_stall_min(self, new_value: float) -> None:
+        self.update('warn_log_stall_min', float(new_value))
+
+    @property
+    def app_timeout_min(self) -> float:
+        """单轮运行多少分钟算超阈值（黄灯）。"""
+        return float(self.get('app_timeout_min', 45) or 45)
+
+    @app_timeout_min.setter
+    def app_timeout_min(self, new_value: float) -> None:
+        self.update('app_timeout_min', float(new_value))

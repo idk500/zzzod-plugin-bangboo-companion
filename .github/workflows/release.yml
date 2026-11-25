@@ -10,4 +10,36 @@ permissions:
 
 jobs:
   release:
-    uses: OneDragon-Anyone/plugin-template/.github/workflows/reusable-release.yml@v1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout plugin repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate package
+        run: python scripts/validate_plugin.py --repo . --strict --expect-tag "$GITHUB_REF_NAME"
+
+      - name: Build zip
+        run: python scripts/build_zip.py --repo . --out dist
+
+      - name: Validate release asset
+        run: python scripts/validate_plugin.py --zip dist/bangboo_companion.zip
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="$GITHUB_REF_NAME"
+          ZIP="dist/bangboo_companion.zip"
+          SHA=$(sha256sum "$ZIP" | cut -d' ' -f1)
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$ZIP" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" "$ZIP" --repo "$GITHUB_REPOSITORY" --verify-tag \
+              --title "$TAG" --notes "邦布安灯 $TAG 自动构建。sha256: $SHA"
+          fi

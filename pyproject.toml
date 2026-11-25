@@ -1,6 +1,6 @@
 name = "zzzod-plugin-bangboo-companion"
-version = "0.1.0"
-description = "Bangboo Companion plugin for ZenlessZoneZero-OneDragon: a desktop dancing bangboo that follows one-dragon run state"
+version = "0.2.0"
+description = "Bangboo Andon plugin for ZenlessZoneZero-OneDragon: a desktop andon signal light that mirrors one-dragon run state (green running / amber warning / red alarm) with acknowledge loop"
 requires-python = ">=3.11"
 readme = "README.md"
 license = { text = "GPL-3.0" }
