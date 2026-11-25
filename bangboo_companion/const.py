@@ -6,5 +6,5 @@ NEED_NOTIFY = False
 
 PLUGIN_AUTHOR = "idk500"
 PLUGIN_HOMEPAGE = "https://github.com/idk500/zzzod-plugin-bangboo-companion"
-PLUGIN_VERSION = "0.3.0"
-PLUGIN_DESCRIPTION = "桌面信号灯：运行中绿、注意黄、异常红、待机灰，红灯闪烁并蜂鸣提示，左键点击表示已知晓；同时覆盖一条龙与单个应用。纯桌面显示，不操作游戏、不影响运行流程。"
+PLUGIN_VERSION = "0.4.0"
+PLUGIN_DESCRIPTION = "桌面小信号灯：默认是悬浮小机器人（眼睛与光晕表状态），也能切成三色灯柱；面板大小可调。"

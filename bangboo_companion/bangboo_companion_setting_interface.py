@@ -1,4 +1,4 @@
-"""运行指示器设置页：显示方式、告警声音、黄灯阈值、灯牌位置。"""
+"""运行指示器设置页：显示方式、外观与大小、告警声音、黄灯阈值、灯牌位置。"""
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -7,8 +7,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget
 from qfluentwidgets import FluentIcon, InfoBar, InfoBarPosition
 
+from one_dragon.base.config.config_item import ConfigItem
 from one_dragon.utils.i18_utils import gt
 from one_dragon_qt.widgets.column import Column
+from one_dragon_qt.widgets.setting_card.combo_box_setting_card import ComboBoxSettingCard
 from one_dragon_qt.widgets.setting_card.push_setting_card import PushSettingCard
 from one_dragon_qt.widgets.setting_card.spin_box_setting_card import SpinBoxSettingCard
 from one_dragon_qt.widgets.setting_card.switch_setting_card import SwitchSettingCard
@@ -48,6 +50,25 @@ class BangbooCompanionSettingInterface(VerticalScrollInterface):
         )
         self.auto_card.value_changed.connect(self._on_auto_show_changed)
         self.content_widget.add_widget(self.auto_card)
+
+        self.style_card = ComboBoxSettingCard(
+            icon=_icon('BRUSH'), title=gt('面板外观'),
+            content=gt('Fairy 形象：悬浮小机器人，用眼睛和光晕表示状态；三色灯柱：传统红黄绿'),
+            options_list=[
+                ConfigItem('Fairy 形象', 'fairy'),
+                ConfigItem('三色灯柱', 'classic'),
+            ],
+        )
+        self.style_card.value_changed.connect(self._on_style_changed)
+        self.content_widget.add_widget(self.style_card)
+
+        self.size_card = SpinBoxSettingCard(
+            icon=_icon('ZOOM'), title=gt('面板大小（%）'),
+            content=gt('也可以在灯牌上滚动滚轮快速缩放；右键菜单可恢复 100%'),
+            minimum=60, maximum=200, step=10,
+        )
+        self.size_card.value_changed.connect(self._on_size_changed)
+        self.content_widget.add_widget(self.size_card)
 
         self.sound_card = SwitchSettingCard(
             icon=_icon('SPEAKERS'), title=gt('红灯蜂鸣'),
@@ -108,6 +129,8 @@ class BangbooCompanionSettingInterface(VerticalScrollInterface):
 
     def _update_display(self) -> None:
         self.auto_card.setValue(self.config.auto_show, emit_signal=False)
+        self.style_card.setValue(self.config.panel_style, emit_signal=False)
+        self.size_card.setValue(int(round(self.config.panel_scale * 100)), emit_signal=False)
         self.sound_card.setValue(self.config.sound_enabled, emit_signal=False)
         self.name_card.setValue(self.config.show_app_name, emit_signal=False)
         self.still_card.setValue(int(self.config.warn_still_streak), emit_signal=False)
@@ -124,6 +147,20 @@ class BangbooCompanionSettingInterface(VerticalScrollInterface):
 
     def _on_sound_changed(self, value: bool) -> None:
         self.config.sound_enabled = value
+
+    def _on_style_changed(self, index, value) -> None:
+        style = str(value)
+        self.config.panel_style = style
+        panel = get_panel_or_none()
+        if panel is not None:
+            panel.set_style(style)
+
+    def _on_size_changed(self, value) -> None:
+        scale = max(0.6, min(2.0, float(value) / 100.0))
+        self.config.panel_scale = scale
+        panel = get_panel_or_none()
+        if panel is not None:
+            panel.set_scale(scale)
 
     def _on_show_name_changed(self, value: bool) -> None:
         self.config.show_app_name = value

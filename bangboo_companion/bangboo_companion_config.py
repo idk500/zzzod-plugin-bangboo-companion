@@ -48,6 +48,28 @@ class BangbooCompanionConfig(ApplicationConfig):
         self.update('panel_y', -1)
 
     @property
+    def panel_scale(self) -> float:
+        """面板缩放比（0.6~2.0，1.0 = 默认大小）。"""
+        try:
+            return max(0.6, min(2.0, float(self.get('panel_scale', 1.0) or 1.0)))
+        except (TypeError, ValueError):
+            return 1.0
+
+    @panel_scale.setter
+    def panel_scale(self, new_value) -> None:
+        self.update('panel_scale', round(max(0.6, min(2.0, float(new_value))), 2))
+
+    @property
+    def panel_style(self) -> str:
+        """面板外观：fairy = 悬浮小机器人，classic = 三色灯柱。"""
+        value = str(self.get('panel_style', 'fairy') or 'fairy')
+        return value if value in ('fairy', 'classic') else 'fairy'
+
+    @panel_style.setter
+    def panel_style(self, new_value: str) -> None:
+        self.update('panel_style', new_value if new_value in ('fairy', 'classic') else 'fairy')
+
+    @property
     def show_app_name(self) -> bool:
         """文字区显示中文应用名（关则显示 app_id）。"""
         return bool(self.get('show_app_name', True))

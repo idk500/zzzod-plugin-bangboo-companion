@@ -299,7 +299,7 @@ class AndonEngine:
         # ---- 统计 ----
         ok = sum(1 for st, dt, _r, _m in records.values() if st == 1 and dt == today)
         fail = sum(1 for st, dt, _r, _m in records.values() if st == 2 and dt == today)
-        stats_text = '今日 ✓%d ✗%d' % (ok, fail)
+        stats_text = '今日 成功 %d · 失败 %d' % (ok, fail)
 
         # ---- 状态仲裁：红 > 黄 > 绿 > 灰 ----
         with self._lock:

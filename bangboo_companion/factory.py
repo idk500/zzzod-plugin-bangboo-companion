@@ -41,7 +41,26 @@ def _get_panel(engine, config: BangbooCompanionConfig | None) -> AndonPanelContr
                     config.panel_x = x
                     config.panel_y = y
 
-            _panel = AndonPanelController(engine, load_pos=_load_pos, save_pos=_save_pos)
+            def _load_scale():
+                return config.panel_scale if config is not None else 1.0
+
+            def _save_scale(value: float):
+                if config is not None:
+                    config.panel_scale = value
+
+            def _load_style():
+                return config.panel_style if config is not None else 'fairy'
+
+            def _save_style(value: str):
+                if config is not None:
+                    config.panel_style = value
+
+            _panel = AndonPanelController(
+                engine,
+                load_pos=_load_pos, save_pos=_save_pos,
+                load_scale=_load_scale, save_scale=_save_scale,
+                load_style=_load_style, save_style=_save_style,
+            )
     return _panel
 
 

@@ -1,5 +1,5 @@
 name = "zzzod-plugin-bangboo-companion"
-version = "0.3.0"
+version = "0.4.0"
 description = "Run status light plugin for ZenlessZoneZero-OneDragon: a small desktop signal light (green running / amber warning / red alarm) with acknowledge loop"
 requires-python = ">=3.11"
 readme = "README.md"
